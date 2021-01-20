@@ -1,3 +1,6 @@
+// decoder of .jsonlz4 for firefox  https://www.jeffersonscher.com/ffu/scrounger.html
+// C:\Users\amibo\AppData\Roaming\Mozilla\Firefox\Profiles\ax6mla76.dev-edition-default 
+// sessionstore.jsonlz4
 class GroupList {
   constructor() {
     this.groups = [];
@@ -34,7 +37,7 @@ class GroupList {
     });
 
     this._searchBar.addEventListener("keyup", (e) => {
-      if(e.key === "Escape" || e.key === "Esc") {
+      if (e.key === "Escape" || e.key === "Esc") {
         this._searchBar.value = "";
         this._cancelButton.classList.add("hidden");
         this._searchBar.blur();
@@ -78,7 +81,7 @@ class GroupList {
       this.maybeCleanSelection(e);
     });
     window.addEventListener("keyup", (e) => {
-      if(e.key === "Escape") {
+      if (e.key === "Escape") {
         this.hideContextMenu();
         this.maybeCleanSelection(e);
       }
@@ -117,13 +120,13 @@ class GroupList {
 
   populateFrom(groupInfo, tabs) {
     let group = new Group(groupInfo);
-    for(let tab of tabs) {
-      if(tab.windowId !== this.windowId) {
+    for (let tab of tabs) {
+      if (tab.windowId !== this.windowId) {
         continue;
       }
 
       let entry = new TabEntry(tab);
-      if(tab.active) {
+      if (tab.active) {
         this._activeTab = entry;
       }
 
@@ -135,7 +138,7 @@ class GroupList {
     group.toggleReverseDisplay(this._reverseTabDisplay);
     group.sortByPosition();
 
-    if(this._activeTab) {
+    if (this._activeTab) {
       this.setActive(this._activeTab);
       this._activeTab.scrollTo();
     }
@@ -144,12 +147,15 @@ class GroupList {
   async populate() {
     let tabs = await browser.tabs.query({ windowId: this.windowId });
 
+    // get values stored,
+    // about:devtools-toolbox?id=power-tabs%40rapptz-addons.com&type=extension
     let old = await browser.storage.local.get(["groups", "reverseTabDisplay", "darkTheme"]);
     this._reverseTabDisplay = old.reverseTabDisplay;
     let isDarkTheme = old.hasOwnProperty("darkTheme") && old.darkTheme === true;
     document.body.classList.add(isDarkTheme ? "dark-theme" : "light-theme");
 
-    if(!old.hasOwnProperty("groups")) {
+    // is this first time? if so, setup all to default group
+    if (!old.hasOwnProperty("groups")) {
       this.port.postMessage({
         method: "freshInstall",
         windowId: this.windowId,
@@ -157,8 +163,11 @@ class GroupList {
       });
     }
     else {
-      // load our groups from localStorage
+      // load our groups from localStorage.
+      // old.groups - readed values of group names
+      // tabs, actually restored tabs
       await this.loadFromLocalStorage(old.groups, tabs);
+      console.debug("toJSON()=", this.toJSON(), "old.groups=", old.groups);
     }
   }
 
@@ -166,7 +175,8 @@ class GroupList {
     // fast lookup
     let lookup = new Map();
 
-    for(let data of groups) {
+    // create empty Groups in Map and assign its uuid as a key
+    for (let data of groups) {
       let group = new Group(data);
       group.parent = this;
       this.groups.push(group);
@@ -176,9 +186,11 @@ class GroupList {
     let oldActiveGroup = this.groups.find((g) => g.active) || this.groups[0];
     let deadEntries = [];
 
-    for(let tab of tabs) {
+    console.debug("tabs()=", tabs);
+
+    for (let tab of tabs) {
       let entry = new TabEntry(tab);
-      if(tab.active) {
+      if (tab.active) {
         this._activeTab = entry;
       }
 
@@ -186,9 +198,11 @@ class GroupList {
 
       // get the group associated with the tab
       let groupId = await browser.sessions.getTabValue(tab.id, "group-id");
-      if(groupId) {
+
+      console.debug("getTabValue(", tab, ") for tab.id=", tab.id, " in groupId()=", groupId, "url=", tab.url);
+      if (groupId) {
         let group = lookup.get(groupId, null);
-        if(group) {
+        if (group) {
           group.loadTab(entry);
         }
         else {
@@ -198,7 +212,7 @@ class GroupList {
       else {
         // a tab with no group ID in its session is a "ghost" tab
         // which means we have to assign it to the last active group
-        if(oldActiveGroup) {
+        if (oldActiveGroup) {
           oldActiveGroup.addTab(entry);
           deadEntries.push(entry);
         }
@@ -206,17 +220,17 @@ class GroupList {
     }
 
     // sort the groups and add to the container
-    for(let group of this.groups) {
+    for (let group of this.groups) {
       group.sortByPosition();
       group.toggleReverseDisplay(this._reverseTabDisplay);
       this._container.appendChild(group.view);
     }
 
-    if(deadEntries.length > 0 && oldActiveGroup) {
+    if (deadEntries.length > 0 && oldActiveGroup) {
       this.notifyGroupChange(deadEntries, oldActiveGroup.uuid);
     }
 
-    if(this._activeTab) {
+    if (this._activeTab) {
       this.setActive(this._activeTab);
       this._activeTab.scrollTo();
     }
@@ -224,12 +238,12 @@ class GroupList {
 
   resyncFromGroupData(groups) {
     this.groups = [];
-    while(this._container.lastChild) {
+    while (this._container.lastChild) {
       this._container.removeChild(this._container.lastChild);
     }
 
     let lookup = new Map();
-    for(let data of groups) {
+    for (let data of groups) {
       let group = new Group(data);
       group.parent = this;
       this.groups.push(group);
@@ -238,14 +252,14 @@ class GroupList {
     }
 
     let deadTabs = [];
-    for(let tab of this._tabCache.values()) {
-      if(!tab.group) {
+    for (let tab of this._tabCache.values()) {
+      if (!tab.group) {
         // not sure what happened here?
         continue;
       }
 
       let group = lookup.get(tab.group.uuid);
-      if(group) {
+      if (group) {
         group.addTab(tab);
       }
       else {
@@ -257,8 +271,8 @@ class GroupList {
   }
 
   async resync() {
-    let tabs = await browser.tabs.query({windowId: this.windowId});
-    for(var tab of tabs) {
+    let tabs = await browser.tabs.query({ windowId: this.windowId });
+    for (var tab of tabs) {
       let entry = this.getTab(tab.id);
       entry.update(tab);
     }
@@ -266,8 +280,8 @@ class GroupList {
 
   clearSelectedExcept(group) {
     let uuid = group && group.uuid;
-    for(let g of this.groups) {
-      if(g.uuid !== uuid) {
+    for (let g of this.groups) {
+      if (g.uuid !== uuid) {
         g.clearSelected();
       }
     }
@@ -276,7 +290,7 @@ class GroupList {
   maybeCleanSelection(e) {
     // clean the selection if we're clicking outside of a group boundary
     let group = e.target === window ? null : Group.groupIdFromEvent(e);
-    if(group === null) {
+    if (group === null) {
       this.groups.forEach((g) => g.cleanSelected());
     }
   }
@@ -297,7 +311,7 @@ class GroupList {
   }
 
   displayAll() {
-    for(let tab of this._tabCache.values()) {
+    for (let tab of this._tabCache.values()) {
       tab.show();
     }
   }
@@ -308,7 +322,7 @@ class GroupList {
 
   getGroup(groupId) {
     let group = this.groups.find((g) => g.uuid == groupId);
-    if(group === undefined) {
+    if (group === undefined) {
       return null;
     }
     return group;
@@ -316,12 +330,12 @@ class GroupList {
 
   removeGroup(group) {
     let index = this.groups.indexOf(group);
-    if(index == -1) {
+    if (index == -1) {
       // kind of strange
       return;
     }
 
-    for(let tab of group.tabs) {
+    for (let tab of group.tabs) {
       tab.close();
     }
 
@@ -335,7 +349,7 @@ class GroupList {
   */
   removeGroupByIndex(index) {
     let group = this.groups[index];
-    for(let tab of group.tabs) {
+    for (let tab of group.tabs) {
       tab.close();
     }
 
@@ -352,7 +366,7 @@ class GroupList {
   }
 
   filterFromText(query) {
-    for(let tab of this._tabCache.values()) {
+    for (let tab of this._tabCache.values()) {
       let match = tab.shouldHide(query);
       tab.toggleVisibility(match);
     }
@@ -360,7 +374,7 @@ class GroupList {
 
   createTab(opts) {
     this._groupBaton = opts.group || this.activeGroup;
-    browser.tabs.create({active: opts.active || true});
+    browser.tabs.create({ active: opts.active || true });
   }
 
   beginBatchMove() {
@@ -382,7 +396,7 @@ class GroupList {
   }
 
   hideContextMenu() {
-    if(this._contextMenu) {
+    if (this._contextMenu) {
       this._contextMenu.hide();
       this._contextMenu = null;
     }
@@ -394,14 +408,14 @@ class GroupList {
 
     let tabId = TabEntry.tabIdFromEvent(e);
     let items = [];
-    if(tabId !== null) {
+    if (tabId !== null) {
       let tab = this.getTab(tabId);
-      if(!tab) {
+      if (!tab) {
         return;
       }
 
       let group = tab.group;
-      if(group.isSelected(tab) && group.selectedCount >= 2) {
+      if (group.isSelected(tab) && group.selectedCount >= 2) {
         items = group.getSelectedContextMenuItems(this);
       }
       else {
@@ -410,11 +424,11 @@ class GroupList {
     }
     else {
       let groupId = Group.groupIdFromEvent(e);
-      if(groupId === null) {
+      if (groupId === null) {
         return;
       }
       let group = this.getGroup(groupId);
-      if(!group) {
+      if (!group) {
         return;
       }
       items = group.getContextMenuItems(this);
@@ -426,7 +440,7 @@ class GroupList {
 
   onActivated(info) {
     console.log(`onActivated: ${this.windowId}/${info.tabId} -> ${JSON.stringify(info)}`);
-    if(info.windowId !== this.windowId) {
+    if (info.windowId !== this.windowId) {
       return;
     }
 
@@ -435,12 +449,12 @@ class GroupList {
 
   onMoved(tabId, moveInfo) {
     console.log(`${this.windowId}/${tabId} -> ${JSON.stringify(moveInfo)}`);
-    if(moveInfo.windowId !== this.windowId || this._signalBatchMove) {
+    if (moveInfo.windowId !== this.windowId || this._signalBatchMove) {
       return;
     }
 
     let tab = this.getTab(tabId);
-    if(!tab || !tab.group) {
+    if (!tab || !tab.group) {
       return;
     }
 
@@ -452,7 +466,7 @@ class GroupList {
 
     tab.group.repositionTab(tabId, moveInfo.toIndex);
     let min, max, increment;
-    if(moveInfo.toIndex > moveInfo.fromIndex) {
+    if (moveInfo.toIndex > moveInfo.fromIndex) {
       increment = -1;
       min = moveInfo.fromIndex;
       max = moveInfo.toIndex + 1;
@@ -463,8 +477,8 @@ class GroupList {
       max = moveInfo.fromIndex;
     }
 
-    for(var entry of this._tabCache.values()) {
-      if(entry.index >= min && entry.index < max) {
+    for (var entry of this._tabCache.values()) {
+      if (entry.index >= min && entry.index < max) {
         entry.index += increment;
       }
     }
@@ -472,20 +486,20 @@ class GroupList {
     tab.index = moveInfo.toIndex;
   }
 
-  setActive(tab, save=false) {
-    if(this._activeTab) {
+  setActive(tab, save = false) {
+    if (this._activeTab) {
       this._activeTab.toggleActive(false);
     }
 
-    if(tab) {
+    if (tab) {
       let groupId = null;
       tab.toggleActive(true);
-      if(tab.group !== this._activeTab.group) {
+      if (tab.group !== this._activeTab.group) {
         this.clearSelectedExcept(tab.group);
-        if(save) {
+        if (save) {
           this.saveStorage();
         }
-        if(tab.group) {
+        if (tab.group) {
           groupId = tab.group.uuid;
         }
       }
@@ -493,7 +507,7 @@ class GroupList {
         groupId = this._activeTab.group && this._activeTab.group.uuid;
       }
       this._activeTab = tab;
-      if(groupId) {
+      if (groupId) {
         this.port.postMessage({
           method: "activeSync",
           windowId: this.windowId,
@@ -506,20 +520,20 @@ class GroupList {
   }
 
   scrollToActiveTab() {
-    if(this._activeTab) {
+    if (this._activeTab) {
       this._activeTab.scrollTo();
     }
   }
 
   onCreated(tabInfo) {
     console.log(`onCreated: ${this.windowId}/${tabInfo.id}`);
-    if(tabInfo.windowId !== this.windowId) {
+    if (tabInfo.windowId !== this.windowId) {
       return;
     }
 
     // update the positions of the tabs
-    for(var tab of this._tabCache.values()) {
-      if(tab.index >= tabInfo.index) {
+    for (var tab of this._tabCache.values()) {
+      if (tab.index >= tabInfo.index) {
         tab.index += 1;
       }
     }
@@ -527,17 +541,17 @@ class GroupList {
     let entry = new TabEntry(tabInfo);
     this._tabCache.set(tabInfo.id, entry);
 
-    if(this._searchBar.value) {
+    if (this._searchBar.value) {
       entry.toggleVisibility(entry.shouldHide(this._searchBar.value));
     }
 
     browser.sessions.getTabValue(entry.id, "group-id").then((groupId) => {
       let group = this._groupBaton ? this._groupBaton : this.getGroup(groupId);
-      if(group) {
+      if (group) {
         let relativeTab = tabInfo.hasOwnProperty("openerTabId") ?
-                          this.getTab(tabInfo.openerTabId) : group.getRightBefore(entry.index);
+          this.getTab(tabInfo.openerTabId) : group.getRightBefore(entry.index);
         group.addTab(entry, relativeTab);
-        if(entry.active) {
+        if (entry.active) {
           this.setActive(entry, true);
         }
       }
@@ -547,15 +561,15 @@ class GroupList {
 
   _removeTab(tabId) {
     let tab = this.getTab(tabId);
-    if(tab) {
+    if (tab) {
       tab.detach();
     }
     this._tabCache.delete(tabId);
 
     // update positions
-    if(tab) {
-      for(var entry of this._tabCache.values()) {
-        if(entry.index >= tab.index) {
+    if (tab) {
+      for (var entry of this._tabCache.values()) {
+        if (entry.index >= tab.index) {
           entry.index -= 1;
         }
       }
@@ -574,7 +588,7 @@ class GroupList {
 
   async onAttached(tabId, attachInfo) {
     console.log(`onAttached: ${this.windowId}/${tabId} -> ${JSON.stringify(attachInfo)}`);
-    if(attachInfo.newWindowId !== this.windowId) {
+    if (attachInfo.newWindowId !== this.windowId) {
       return;
     }
 
@@ -584,11 +598,11 @@ class GroupList {
     this._tabCache.set(tabInfo.id, entry);
     let group = this.activeGroup;
 
-    if(group) {
+    if (group) {
       group.attachTab(entry, attachInfo.newPosition);
     }
 
-    if(entry.active) {
+    if (entry.active) {
       this.setActive(entry);
     }
   }
@@ -596,9 +610,9 @@ class GroupList {
   onUpdated(tabId, changeInfo, tabInfo) {
     console.log(`onUpdated: ${this.windowId}/${tabId} -> ${JSON.stringify(changeInfo)} -> ${JSON.stringify(tabInfo)}`);
     let tab = this.getTab(tabId);
-    if(tab) {
+    if (tab) {
       tab.update(changeInfo);
-      if(this._searchBar.value) {
+      if (this._searchBar.value) {
         tab.toggleVisibility(tab.shouldHide(this._searchBar.value));
       }
     }
@@ -608,7 +622,7 @@ class GroupList {
 
   onDragOver(e) {
     // only groups and tabs are draggable
-    if(TabEntry.tabIdFromEvent(e) || Group.groupIdFromEvent(e)) {
+    if (TabEntry.tabIdFromEvent(e) || Group.groupIdFromEvent(e)) {
       e.preventDefault();
     }
   }
@@ -618,12 +632,12 @@ class GroupList {
     e.dataTransfer.setData("text/plain", "...");
 
     let tabId = TabEntry.tabIdFromEvent(e);
-    if(tabId) {
+    if (tabId) {
       let tab = this._dragContext.tab = this.getTab(tabId);
-      if(tab) {
+      if (tab) {
         this._dragContext.group = tab.group;
         let isSolo = this._dragContext.isSoloTab = tab.group.selectedCount <= 1;
-        if(isSolo) {
+        if (isSolo) {
           tab.view.classList.add("drag-target");
         }
         else {
@@ -639,15 +653,15 @@ class GroupList {
   }
 
   onDragEnd(e) {
-    if(this._dragContext.tab !== null) {
-      if(this._dragContext.isSoloTab) {
+    if (this._dragContext.tab !== null) {
+      if (this._dragContext.isSoloTab) {
         this._dragContext.tab.view.classList.remove("drag-target");
       }
       else {
         this._dragContext.group.styleSelectedDragStart(false);
       }
     }
-    else if(this._dragContext.group !== null) {
+    else if (this._dragContext.group !== null) {
       this._dragContext.group.view.classList.remove("drag-target");
     }
   }
@@ -658,8 +672,8 @@ class GroupList {
     let relativeTab = this.getTab(TabEntry.tabIdFromEvent(e));
     let group = this.groups[groupIndex];
 
-    if(this._dragContext.isSoloTab) {
-      if(relativeTab === this._dragContext.tab) {
+    if (this._dragContext.isSoloTab) {
+      if (relativeTab === this._dragContext.tab) {
         return;
       }
 
@@ -693,23 +707,23 @@ class GroupList {
   async onDrop(e) {
     console.log("Drop", e, this._dragContext);
     let groupId = Group.groupIdFromEvent(e);
-    if(!groupId) {
+    if (!groupId) {
       return;
     }
 
     let groupIndex = this.groups.findIndex((g) => g.uuid == groupId);
-    if(groupIndex === -1) {
+    if (groupIndex === -1) {
       return;
     }
 
-    if(this._dragContext.tab !== null) {
+    if (this._dragContext.tab !== null) {
       // we're drag and dropping tabs into a group
       await this._dropTabs(e, groupIndex);
     }
-    else if(this._dragContext.group !== null) {
+    else if (this._dragContext.group !== null) {
       // we're drag and dropping a group
       let group = this.groups[groupIndex];
-      if(group === this._dragContext.group) {
+      if (group === this._dragContext.group) {
         return;
       }
 
@@ -719,7 +733,7 @@ class GroupList {
       this.groups.splice(groupIndex, 0, this.groups.splice(originalIndex, 1)[0]);
 
       // modify the DOM to point to the new structure
-      if(originalIndex > groupIndex) {
+      if (originalIndex > groupIndex) {
         this._container.insertBefore(this._dragContext.group.view, group.view);
       }
       else {
@@ -733,30 +747,30 @@ class GroupList {
   }
 
   onStorageChange(changes, area) {
-    if(area !== "local") {
+    if (area !== "local") {
       return;
     }
 
-    if(changes.hasOwnProperty("reverseTabDisplay")) {
+    if (changes.hasOwnProperty("reverseTabDisplay")) {
       this._reverseTabDisplay = changes.reverseTabDisplay.newValue;
-      for(let group of this.groups) {
+      for (let group of this.groups) {
         group.toggleReverseDisplay(this._reverseTabDisplay);
       }
     }
 
-    if(changes.hasOwnProperty("darkTheme")) {
+    if (changes.hasOwnProperty("darkTheme")) {
       let newValue = changes.darkTheme.newValue;
-      if(newValue) {
+      if (newValue) {
         document.body.classList.remove("light-theme");
         document.body.classList.add("dark-theme");
       }
       else {
-        document.body.classList.remove("dark-theme"); 
+        document.body.classList.remove("dark-theme");
         document.body.classList.add("light-theme");
       }
     }
 
-    if(changes.hasOwnProperty("groups")) {
+    if (changes.hasOwnProperty("groups")) {
       this.resyncFromGroupData(changes.groups.newValue);
     }
   }
@@ -767,22 +781,22 @@ var groupList;
 var port;
 
 function onMessage(message) {
-  if(message.method == "onTabCreated") {
+  if (message.method == "onTabCreated") {
     groupList.onCreated(message.data);
   }
-  else if(message.method == "moveTabGroup") {
+  else if (message.method == "moveTabGroup") {
     let tab = groupList.getTab(message.tabId);
     let group = groupList.getGroup(message.groupId);
-    if(tab && group) {
+    if (tab && group) {
       tab.detach();
       group.loadTab(tab);
       group.repositionTab(tab.id, tab.index);
     }
   }
-  else if(message.method == "setGroupBaton" && message.windowId === groupList.windowId) {
+  else if (message.method == "setGroupBaton" && message.windowId === groupList.windowId) {
     groupList.setGroupBaton(message.groupId);
   }
-  else if(message.method == "finishedFreshInstall") {
+  else if (message.method == "finishedFreshInstall") {
     groupList.populateFrom(message.group, message.tabs);
   }
 }
@@ -791,7 +805,7 @@ function onMessage(message) {
   groupList = new GroupList();
   let windowId = await groupList.getWindowId();
 
-  port = browser.runtime.connect({name: windowId.toString() });
+  port = browser.runtime.connect({ name: windowId.toString() });
   groupList.port = port;
   port.onMessage.addListener(onMessage);
 

@@ -16,13 +16,13 @@ class GroupSetting {
   }
 
   save() {
-    browser.storage.local.set({groups: this.allGroups});
+    browser.storage.local.set({ groups: this.allGroups });
   }
 
   saveNewName() {
     let newText = this._nameEdit.value.trim();
-    if(newText) {
-      if(this.name !== newText) {
+    if (newText) {
+      if (this.name !== newText) {
         this._nameEdit.classList.remove("invalid");
         this.data.name = newText;
         this.name = newText;
@@ -53,7 +53,7 @@ class GroupSetting {
 
     nameEdit.addEventListener("keyup", (e) => {
       e.preventDefault();
-      if(e.key == "Enter") {
+      if (e.key == "Enter") {
         this.saveNewName();
       }
     });
@@ -72,7 +72,7 @@ class GroupSetting {
     this._assignedDomains = assignedDomains;
 
     assignedDomains.addEventListener("keydown", (e) => {
-      if(e.key === "Delete") {
+      if (e.key === "Delete") {
         let selected = [...assignedDomains.children].filter((n) => n.selected).map((n) => {
           assignedDomains.removeChild(n);
           return n.getAttribute("data-key");
@@ -84,7 +84,7 @@ class GroupSetting {
     let deleteGroup = templ.getElementById("deleteGroup");
     deleteGroup.id = "";
     deleteGroup.addEventListener("click", (e) => {
-      if(confirm("Are you sure you want to delete this group?")) {
+      if (confirm("Are you sure you want to delete this group?")) {
         this.allGroups.splice(this.index, 1);
         this.save();
         clearGroupSettings();
@@ -109,27 +109,27 @@ function loadGroupSettings(data) {
   var lookup = new Map();
   console.log('loadGroupSettings()');
 
-  if(!data.hasOwnProperty("groups")) {
+  if (!data.hasOwnProperty("groups")) {
     let el = document.createElement("p");
     el.innerText = "Seems we don't have anything here...";
     groupSettings.appendChild(el);
     return;
   }
 
-  for(let index = 0; index < data.groups.length; ++index) {
+  for (let index = 0; index < data.groups.length; ++index) {
     let setting = new GroupSetting(data.groups, index);
     lookup.set(data.groups[index].uuid, setting);
     groupSettings.appendChild(setting.view);
   }
 
   // check for page assignments
-  for(let key of Object.keys(data)) {
-    if(key.indexOf("page:") !== 0) {
+  for (let key of Object.keys(data)) {
+    if (key.indexOf("page:") !== 0) {
       continue;
     }
 
     let setting = lookup.get(data[key].group);
-    if(setting) {
+    if (setting) {
       setting.addAssignment(key.slice(5));
     }
   }
@@ -137,7 +137,7 @@ function loadGroupSettings(data) {
 
 function clearGroupSettings() {
   let groupSettings = document.getElementById("group-settings");
-  while(groupSettings.lastChild && groupSettings.lastChild.id !== "createGroup") {
+  while (groupSettings.lastChild && groupSettings.lastChild.id !== "createGroup") {
     groupSettings.removeChild(groupSettings.lastChild);
   }
 }
@@ -167,7 +167,7 @@ function loadRegularSettings(data) {
     saveSettings("discardOnGroupChange", discardOnGroupChange.checked);
   });
 
-  if(!browser.tabs.hasOwnProperty("discard")) {
+  if (!browser.tabs.hasOwnProperty("discard")) {
     discardOnGroupChange.setAttribute("disabled", 1);
   }
 
@@ -177,7 +177,7 @@ function loadRegularSettings(data) {
     saveSettings("hideOnGroupChange", hideOnGroupChange.checked);
   });
 
-  if(!browser.tabs.hasOwnProperty("hide")) {
+  if (!browser.tabs.hasOwnProperty("hide")) {
     hideOnGroupChange.setAttribute("disabled", 1);
   }
 
@@ -206,12 +206,6 @@ function loadRegularSettings(data) {
   });
 }
 
-let importFromfile = document.getElementById("importFromfile");
-importFromfile.addEventListener("click", (e) => {
-  funImportFromfile();
-});
-
-
 async function loadSettings() {
   let data = await browser.storage.local.get();
   loadRegularSettings(data);
@@ -229,62 +223,13 @@ async function onGroupCreate(e) {
   loadGroupSettings(data);
 }
 
+async function onImportJSON() {
+  let jsonString = document.getElementById('importJSONText').value
+  console.debug('entered:', jsonString);
+}
+
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files#open_files_in_an_extension_using_a_file_picker
-function funImportFromfile(){
-  console.log('funImportFromfile()');
-  readFileFrom();
-}
-
-function importFromfileJQuery(){
-  console.log('importFromfile()');
-  let filename = jQuery('#importFileInput').val().replace('C:\\fakepath\\', '');
-  if (!filename) {
-    console.log('Select a filename');
-  } else {
-    let path = jQuery('#importFilePathInput').val() + '/' + filename;
-    if (!path.startsWith('file://')) {
-      path = 'file://' + path;
-    }
-    fetch(path, {mode:'same-origin'})
-      .then(function(result){
-        return result.blob();
-      })
-      .then(function(blob){
-        let reader = new FileReader();
-        reader.addEventListener('loadend', function(){
-          Model.save(JSON.parse(this.result)); // your function here
-        });
-        reader.readAsText(blob);
-      });
-  }
-}
-
-function readFile(_path, _cb){
-
-  fetch(_path, {mode:'same-origin'})   // <-- important
-
-  .then(function(_res) {
-      return _res.blob();
-  })
-
-  .then(function(_blob) {
-      var reader = new FileReader();
-
-      reader.addEventListener("loadend", function() {
-          _cb(this.result);
-      });
-
-      reader.readAsText(_blob); 
-  });
-}
-
-function readFileFrom(){
-  console.log('readFileFrom()');
-readFile('file:///C:/MMDLauncherRecords.log', function(_res){
-    console.log(_res); // <--  result (file content)
-});
-}
-
 document.getElementById("createGroup").addEventListener("click", onGroupCreate);
 document.addEventListener("DOMContentLoaded", loadSettings);
+document.getElementById("importJSONButton").addEventListener("click", onImportJSON);
