@@ -21,7 +21,8 @@
         "webRequest",
         "history",
         "menus",
-        "tabHide"
+        "tabHide",
+        "nativeMessaging"
     ],
 
     "commands": {

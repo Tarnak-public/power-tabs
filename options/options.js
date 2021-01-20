@@ -1,3 +1,5 @@
+// [{"name":"untitled","uuid":"6e93652d-6535-4280-a3d4-ffb62ad9e986","open":true,"active":false,"colour":"#ffff00"},{"name":"test","uuid":"fbbea549-130f-442a-bcfc-759ac65269f8","open":true,"active":true,"colour":"#ffff00"}] 
+//firefox about:debug , 
 class GroupSetting {
   constructor(allGroups, index) {
     let data = allGroups[index];
@@ -105,6 +107,7 @@ class GroupSetting {
 function loadGroupSettings(data) {
   var groupSettings = document.getElementById("group-settings");
   var lookup = new Map();
+  console.log('loadGroupSettings()');
 
   if(!data.hasOwnProperty("groups")) {
     let el = document.createElement("p");
@@ -203,6 +206,12 @@ function loadRegularSettings(data) {
   });
 }
 
+let importFromfile = document.getElementById("importFromfile");
+importFromfile.addEventListener("click", (e) => {
+  funImportFromfile();
+});
+
+
 async function loadSettings() {
   let data = await browser.storage.local.get();
   loadRegularSettings(data);
@@ -218,6 +227,63 @@ async function onGroupCreate(e) {
   let data = await browser.storage.local.get("groups");
   clearGroupSettings();
   loadGroupSettings(data);
+}
+
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files#open_files_in_an_extension_using_a_file_picker
+function funImportFromfile(){
+  console.log('funImportFromfile()');
+  readFileFrom();
+}
+
+function importFromfileJQuery(){
+  console.log('importFromfile()');
+  let filename = jQuery('#importFileInput').val().replace('C:\\fakepath\\', '');
+  if (!filename) {
+    console.log('Select a filename');
+  } else {
+    let path = jQuery('#importFilePathInput').val() + '/' + filename;
+    if (!path.startsWith('file://')) {
+      path = 'file://' + path;
+    }
+    fetch(path, {mode:'same-origin'})
+      .then(function(result){
+        return result.blob();
+      })
+      .then(function(blob){
+        let reader = new FileReader();
+        reader.addEventListener('loadend', function(){
+          Model.save(JSON.parse(this.result)); // your function here
+        });
+        reader.readAsText(blob);
+      });
+  }
+}
+
+function readFile(_path, _cb){
+
+  fetch(_path, {mode:'same-origin'})   // <-- important
+
+  .then(function(_res) {
+      return _res.blob();
+  })
+
+  .then(function(_blob) {
+      var reader = new FileReader();
+
+      reader.addEventListener("loadend", function() {
+          _cb(this.result);
+      });
+
+      reader.readAsText(_blob); 
+  });
+}
+
+function readFileFrom(){
+  console.log('readFileFrom()');
+readFile('file:///C:/MMDLauncherRecords.log', function(_res){
+    console.log(_res); // <--  result (file content)
+});
 }
 
 document.getElementById("createGroup").addEventListener("click", onGroupCreate);

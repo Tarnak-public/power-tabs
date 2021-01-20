@@ -1,0 +1,14 @@
+//"C:\Program Files\Mozilla Firefox\firefox.exe" --start-debugger-server
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch WebExtension",
+            "type": "firefox",
+            "request": "launch",
+            "reAttach": true,
+            "addonPath": "${workspaceFolder}"
+        }
+    ]
+}
+
