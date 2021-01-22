@@ -494,7 +494,7 @@ class GroupList {
     if (tab) {
       let groupId = null;
       tab.toggleActive(true);
-      if (tab.group !== this._activeTab.group) {
+      if (this._activeTab != null && tab.group !== this._activeTab.group) {
         this.clearSelectedExcept(tab.group);
         if (save) {
           this.saveStorage();

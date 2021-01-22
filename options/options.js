@@ -162,12 +162,16 @@ function loadRegularSettings(data) {
   });
 
   let discardOnGroupChange = document.getElementById("discardOnGroupChange");
+  if (discardOnGroupChange == null)
+    return;
   discardOnGroupChange.checked = data.discardOnGroupChange;
   discardOnGroupChange.addEventListener("click", (e) => {
     saveSettings("discardOnGroupChange", discardOnGroupChange.checked);
   });
 
   if (!browser.tabs.hasOwnProperty("discard")) {
+    if (discardOnGroupChange == null)
+      return;
     discardOnGroupChange.setAttribute("disabled", 1);
   }
 
@@ -225,11 +229,71 @@ async function onGroupCreate(e) {
 
 async function onImportJSON() {
   let jsonString = document.getElementById('importJSONText').value
-  console.debug('entered:', jsonString);
+  // let jsonDefaultString = document.getElementById('hdn').value;
+
+  console.debug('entered string:', jsonString);
+  let json = JSON.parse(jsonString);
+  console.debug('got json:', json);
+  let group_names = json.groups[0];
+  document.getElementById("groupList").innerHTML = "";
+  for (group in group_names) {
+    console.debug('group:', group);
+    addGroupToGroupListFromJson(group);
+    let urls = group_names[group].urls;
+    for (url in urls) {
+      console.debug('url:', urls[url]);
+    }
+  }
 }
+
+function addGroupToGroupListFromJson(name) {
+  var ul = document.getElementById("groupList");
+  var li = document.createElement("li");
+  li.appendChild(document.createTextNode(name));
+  ul.appendChild(li);
+}
+
+function getTabsFromGroupJSON(groupSelected) {
+  let jsonString = document.getElementById('importJSONText').value
+  console.debug('entered string:', jsonString);
+  let json = JSON.parse(jsonString);
+  console.debug('got json:', json);
+  let group_names = json.groups[0];
+  for (group in group_names) {
+    if (group != groupSelected)
+      continue;
+    document.getElementById("tabsList").innerHTML = "";
+    console.debug('group:', group);
+    let urls = group_names[group].urls;
+    for (url in urls) {
+      addTabsToTabsListFromJson(urls[url]);
+      console.debug('url:', urls[url]);
+    }
+  }
+}
+
+function addTabsToTabsListFromJson(name) {
+  var ul = document.getElementById("tabsList");
+  var li = document.createElement("li");
+  li.appendChild(document.createTextNode(name));
+  ul.appendChild(li);
+}
+
+function getEventTarget(e) {
+  e = e || window.event;
+  return e.target || e.srcElement;
+}
+
+var ul = document.getElementById('groupList');
+ul.onclick = function (event) {
+  var target = getEventTarget(event);
+  console.debug('selected:', target.innerHTML);
+  getTabsFromGroupJSON(target.innerHTML)
+};
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files#open_files_in_an_extension_using_a_file_picker
 document.getElementById("createGroup").addEventListener("click", onGroupCreate);
 document.addEventListener("DOMContentLoaded", loadSettings);
 document.getElementById("importJSONButton").addEventListener("click", onImportJSON);
+document.getElementById('importJSONText').value = document.getElementById('hdn').value;

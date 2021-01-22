@@ -36,3 +36,10 @@ Represents an automatic assignment. Basically a URL that is assigned to automati
 | :------: | :-----: | :------------------------------------------------------------------: |
 |  group   |  String |         The group's unique ID that refers to this assignment         |
 | neverAsk | Boolean | Whether to ask to redirect if the group differs from the assignment. |
+
+
+edytor online:
+https://jsoneditoronline.org/#right=local.disequ&left=cloud.15aa24c3ab9f460287daf4301c810add
+
+
+https://www.w3schools.com/js/js_json_datatypes.asp
