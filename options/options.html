@@ -4,7 +4,6 @@
 <head>
   <meta charset="utf-8">
   <link rel="stylesheet" href="options.css" />
-  <link rel="stylesheet" href="classes/listbox.css" />
 </head>
 
 <body>
@@ -51,37 +50,34 @@
     </div>
 
     <div class="settings-group">
-      <div class="label">
-        Import json file
-        <div class="aside">
-          <p>
-            load json file
-          </p>
-        </div>
-      </div>
-
       <input id="hdn" type="hidden"
         value='{"groups":[{"group_name":{"id":123,"group-id":"guid4","urls":["https://google.com","https://google.pl"]},"group_name2":{"id":222,"group-id":"guid4","urls":["https://google.fr","https://google.es"]}}],"id_backup":123,"window_backup":"this"}'>
 
       <form action="" id="form1">
-        <fieldset>
-          <label>Import tabs:</label>
-          <input type="text" id="importJSONText" value="" />
+        <fieldset style="width:100%">
+          <div class="label">
+            Import tabs:
+          </div>
+          <input type="text" id="importJSONText" value="" style="width:60%">
           <input type="button" id="importJSONButton" value="load">
-          <div>
-            <header>Groups:</header>
-            <nav>
-              <ul id="groupList" style="border: 1px solid black">
-              </ul>
-            </nav>
-          </div>
-          <div>
-            <header>Tabs:</header>
-            <nav>
-              <ul id="tabsList" style="border: 1px solid black">
-              </ul>
-            </nav>
-          </div>
+          <table class="fixed" style="widows: 500px;">
+            <tr>
+              <td>
+                <header>Groups:</header>
+                <nav>
+                  <ul id="groupList" style="width:200px; border: 1px solid black">
+                  </ul>
+                </nav>
+              </td>
+              <td>
+                <header id="tabsNames">Tabs:</header>
+                <nav>
+                  <ul id="tabsList" style="width:300px; border: 1px solid black">
+                  </ul>
+                </nav>
+              </td>
+            </tr>
+          </table>
         </fieldset>
       </form>
     </div>

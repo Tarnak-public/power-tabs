@@ -101,9 +101,9 @@ input.invalid {
 
 /* For nested lists */
 
-nav ul{height:100px; width:100%;}
+nav ul{height:100px;}
 nav ul{overflow:hidden; overflow-y:scroll;}
 
-.checked {
-  text-decoration-line: underline overline;
+.grey {
+  background-color: grey;
 }

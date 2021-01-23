@@ -1,5 +1,5 @@
-// [{"name":"untitled","uuid":"6e93652d-6535-4280-a3d4-ffb62ad9e986","open":true,"active":false,"colour":"#ffff00"},{"name":"test","uuid":"fbbea549-130f-442a-bcfc-759ac65269f8","open":true,"active":true,"colour":"#ffff00"}] 
-//firefox about:debug , 
+// [{"name":"untitled","uuid":"6e93652d-6535-4280-a3d4-ffb62ad9e986","open":true,"active":false,"colour":"#ffff00"},{"name":"test","uuid":"fbbea549-130f-442a-bcfc-759ac65269f8","open":true,"active":true,"colour":"#ffff00"}]
+//firefox about:debug ,
 class GroupSetting {
   constructor(allGroups, index) {
     let data = allGroups[index];
@@ -16,7 +16,9 @@ class GroupSetting {
   }
 
   save() {
-    browser.storage.local.set({ groups: this.allGroups });
+    browser.storage.local.set({
+      groups: this.allGroups,
+    });
   }
 
   saveNewName() {
@@ -29,14 +31,15 @@ class GroupSetting {
         this._header.textContent = `Group Settings – ${newText}`;
         this.save();
       }
-    }
-    else {
+    } else {
       this._nameEdit.classList.add("invalid");
     }
   }
 
   buildView() {
-    var templ = document.getElementById("group-template").content.cloneNode(true);
+    var templ = document
+      .getElementById("group-template")
+      .content.cloneNode(true);
 
     this._header = templ.getElementById("groupHeader");
     this._header.id = "";
@@ -60,7 +63,9 @@ class GroupSetting {
 
     let colourEdit = templ.getElementById("groupColour");
     colourEdit.id = "";
-    colourEdit.value = this.data.hasOwnProperty("colour") ? this.data.colour : '#000000';
+    colourEdit.value = this.data.hasOwnProperty("colour")
+      ? this.data.colour
+      : "#000000";
 
     colourEdit.addEventListener("change", (e) => {
       this.data.colour = colourEdit.value;
@@ -73,10 +78,12 @@ class GroupSetting {
 
     assignedDomains.addEventListener("keydown", (e) => {
       if (e.key === "Delete") {
-        let selected = [...assignedDomains.children].filter((n) => n.selected).map((n) => {
-          assignedDomains.removeChild(n);
-          return n.getAttribute("data-key");
-        });
+        let selected = [...assignedDomains.children]
+          .filter((n) => n.selected)
+          .map((n) => {
+            assignedDomains.removeChild(n);
+            return n.getAttribute("data-key");
+          });
         browser.storage.local.remove(selected);
       }
     });
@@ -88,7 +95,9 @@ class GroupSetting {
         this.allGroups.splice(this.index, 1);
         this.save();
         clearGroupSettings();
-        loadGroupSettings({ groups: this.allGroups });
+        loadGroupSettings({
+          groups: this.allGroups,
+        });
       }
     });
 
@@ -107,7 +116,7 @@ class GroupSetting {
 function loadGroupSettings(data) {
   var groupSettings = document.getElementById("group-settings");
   var lookup = new Map();
-  console.log('loadGroupSettings()');
+  console.log("loadGroupSettings()");
 
   if (!data.hasOwnProperty("groups")) {
     let el = document.createElement("p");
@@ -137,7 +146,10 @@ function loadGroupSettings(data) {
 
 function clearGroupSettings() {
   let groupSettings = document.getElementById("group-settings");
-  while (groupSettings.lastChild && groupSettings.lastChild.id !== "createGroup") {
+  while (
+    groupSettings.lastChild &&
+    groupSettings.lastChild.id !== "createGroup"
+  ) {
     groupSettings.removeChild(groupSettings.lastChild);
   }
 }
@@ -162,16 +174,14 @@ function loadRegularSettings(data) {
   });
 
   let discardOnGroupChange = document.getElementById("discardOnGroupChange");
-  if (discardOnGroupChange == null)
-    return;
+  if (discardOnGroupChange == null) return;
   discardOnGroupChange.checked = data.discardOnGroupChange;
   discardOnGroupChange.addEventListener("click", (e) => {
     saveSettings("discardOnGroupChange", discardOnGroupChange.checked);
   });
 
   if (!browser.tabs.hasOwnProperty("discard")) {
-    if (discardOnGroupChange == null)
-      return;
+    if (discardOnGroupChange == null) return;
     discardOnGroupChange.setAttribute("disabled", 1);
   }
 
@@ -220,54 +230,56 @@ async function onGroupCreate(e) {
   let groupSettings = document.getElementById("group-settings");
   let newGroup = await browser.runtime.sendMessage({
     method: "createGroup",
-    windowId: null
+    windowId: null,
   });
   let data = await browser.storage.local.get("groups");
   clearGroupSettings();
   loadGroupSettings(data);
 }
 
-async function onImportJSON() {
-  let jsonString = document.getElementById('importJSONText').value
-  // let jsonDefaultString = document.getElementById('hdn').value;
+var jsonImported;
 
-  console.debug('entered string:', jsonString);
-  let json = JSON.parse(jsonString);
-  console.debug('got json:', json);
-  let group_names = json.groups[0];
+async function onImportJSON() {
+  let jsonString = document.getElementById("importJSONText").value;
+  console.debug("entered string:", jsonString);
+  jsonImported = JSON.parse(jsonString);
+  console.debug("got json:", jsonImported);
+  let group_names = jsonImported.groups[0];
   document.getElementById("groupList").innerHTML = "";
   for (group in group_names) {
-    console.debug('group:', group);
-    addGroupToGroupListFromJson(group);
+    console.debug("group:", group);
     let urls = group_names[group].urls;
+    // addGroupToGroupListFromJson(group + " (" + urls.length + ")");
+    addGroupToGroupListFromJson(group, urls.length);
     for (url in urls) {
-      console.debug('url:', urls[url]);
+      console.debug("url:", urls[url]);
     }
   }
 }
 
-function addGroupToGroupListFromJson(name) {
+function addGroupToGroupListFromJson(name, tabsCount) {
   var ul = document.getElementById("groupList");
   var li = document.createElement("li");
-  li.appendChild(document.createTextNode(name));
+  li.appendChild(document.createElement("class"));
+  let textNode = document.createTextNode(name + " (" + tabsCount + ")");
+  li.accessKey = name;
+  li.appendChild(textNode);
   ul.appendChild(li);
 }
 
-function getTabsFromGroupJSON(groupSelected) {
-  let jsonString = document.getElementById('importJSONText').value
-  console.debug('entered string:', jsonString);
-  let json = JSON.parse(jsonString);
-  console.debug('got json:', json);
+function getTabsFromGroupJSON(json, groupSelected) {
+  console.debug("getTabsFromGroupJSON() groupSelected:", groupSelected);
+  console.debug("got json:", json);
   let group_names = json.groups[0];
   for (group in group_names) {
-    if (group != groupSelected)
-      continue;
+    if (group != groupSelected) continue;
+    document.getElementById("tabsNames").innerHTML = "Tabs [" + group + "]:";
     document.getElementById("tabsList").innerHTML = "";
-    console.debug('group:', group);
+    console.debug("group:", group);
     let urls = group_names[group].urls;
     for (url in urls) {
       addTabsToTabsListFromJson(urls[url]);
-      console.debug('url:', urls[url]);
+      console.debug("url:", urls[url]);
     }
   }
 }
@@ -284,16 +296,42 @@ function getEventTarget(e) {
   return e.target || e.srcElement;
 }
 
-var ul = document.getElementById('groupList');
+var selectedItemGroupList = null;
+var ul = document.getElementById("groupList");
+
 ul.onclick = function (event) {
   var target = getEventTarget(event);
-  console.debug('selected:', target.innerHTML);
-  getTabsFromGroupJSON(target.innerHTML)
+  console.debug(
+    "selected: ",
+    target,
+    " ,innerHTML:",
+    target.innerHTML,
+    " ,accesskey:",
+    target.accessKey
+  );
+  if (jsonImported && target) {
+    changeGroupListActiveItem(target);
+    getTabsFromGroupJSON(jsonImported, target.accessKey);
+  }
 };
+
+function changeGroupListActiveItem(newActiveItem) {
+  if (selectedItemGroupList != null && selectedItemGroupList != newActiveItem)
+    selectedItemGroupList.className = "";
+
+  newActiveItem.className = "grey";
+  selectedItemGroupList = newActiveItem;
+  console.debug("new active item: " + newActiveItem);
+}
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files#open_files_in_an_extension_using_a_file_picker
 document.getElementById("createGroup").addEventListener("click", onGroupCreate);
 document.addEventListener("DOMContentLoaded", loadSettings);
-document.getElementById("importJSONButton").addEventListener("click", onImportJSON);
-document.getElementById('importJSONText').value = document.getElementById('hdn').value;
+document
+  .getElementById("importJSONButton")
+  .addEventListener("click", onImportJSON);
+
+document.getElementById("importJSONText").value = document.getElementById(
+  "hdn"
+).value;
