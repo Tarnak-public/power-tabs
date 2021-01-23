@@ -38,8 +38,33 @@ Represents an automatic assignment. Basically a URL that is assigned to automati
 | neverAsk | Boolean | Whether to ask to redirect if the group differs from the assignment. |
 
 
+#### Methods 
+----
+listen.js createGroup()
+    browser.storage.local.get return stored groups json:
+    about:devtools-toolbox?id=power-tabs%40rapptz-addons.com&type=extension
+     "[{"name":"untitled","uuid":"e565f959-3dc2-487a-8823-171e87c502dd","open":true,"active":false,"colour":"#000000"},{"name":"untitled","uuid":"017779f7-8c22-44c8-88d1-171b55abffe5","open":true,"active":false,"colour":"#000000"},{"name":"untitled","uuid":"631aedd6-016d-45a2-8e3e-b34171aaca61","open":true,"active":true,"colour":"#000000"}]"
+----
+listen.js createTab()
+it setting active-group and creating tab by browser.tabs.create() but with known active-group now.
+----
+listen.js onTabCreated() here during creation of tab, it's assigned to group:
+browser.sessions.setTabValue(tabInfo.id, "group-id", groupId);
+----
+confirm.js loadData()
+seems to be a method which matches tabs to groups during tab creation.
+----
+
+------------------------------------------------------------------------
 edytor online:
 https://jsoneditoronline.org/#right=local.disequ&left=cloud.15aa24c3ab9f460287daf4301c810add
 
-
 https://www.w3schools.com/js/js_json_datatypes.asp
+
+
+
+extension anatomy:
+https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension
+
+decompress lz4json:
+https://www.jeffersonscher.com/ffu/bookbackreader.html
