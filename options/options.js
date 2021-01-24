@@ -142,7 +142,7 @@ function loadGroupSettings(data) {
       setting.addAssignment(key.slice(5));
     }
   }
-  getStoredSessions();
+  readStoredSessions();
 }
 
 function clearGroupSettings() {
