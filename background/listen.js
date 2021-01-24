@@ -276,6 +276,7 @@ async function toggleNeverAsk(domainName, value) {
   await browser.storage.local.set(settings);
 }
 
+//####
 async function createTab(windowId, groupId, sendResponse=null) {
   let oldGroupId = await browser.sessions.getWindowValue(windowId, "active-group-id");
   let dispatch = oldGroupId !== groupId;
@@ -308,6 +309,7 @@ async function createTab(windowId, groupId, sendResponse=null) {
   }
 }
 
+//### create group
 async function createGroup(windowId, sendResponse=null) {
   let newGroup = {
     name: "untitled",
@@ -606,6 +608,7 @@ async function onTabCreated(tabInfo) {
   let groupId = await browser.sessions.getWindowValue(tabInfo.windowId, "active-group-id");
   await browser.sessions.setTabValue(tabInfo.id, "group-id", groupId);
   _tabInfo.set(tabInfo.id, new TabInfo(tabInfo.lastAccessed, groupId, tabInfo.windowId));
+  console.log("listen.js / onTabCreated() group-id=" + groupId + " , tabInfo.id=" + tabInfo.id);
   await setActiveGroupIcon(tabInfo.id, groupId);
   postMessage({
     method: "onTabCreated",

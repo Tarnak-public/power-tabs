@@ -48,19 +48,50 @@
       </div>
       <input class="setting" type="checkbox" id="hideOnGroupChange">
     </div>
-
-    <div class="settings-group">
+    <div>
+      <form action="" id="formBackupRestore">
+        <fieldset style="width:100%">
+          <div class="label">
+            Backup/Restore Sessions:
+          </div>
+          <input type="text" id="JSONText" value="" style="width:500px">
+          <input type="button" id="JSONButton" value="load">
+          <table class="fixed" style="width: 100%;">
+            <tr>
+              <td>
+                <header>Restore:</header>
+                <nav>
+                  <ul id="backupsList" style="width:200px; border: 1px solid black">
+                  </ul>
+                </nav>
+                <input type="button" id="restorSessionButton" value="Restore Session">
+                <input type="button" id="restorSessionButton" value="Delete Session">
+              </td>
+              <td>
+                <header id="tabsNames">Current Session:</header>
+                <nav>
+                  <ul id="actualTabsList" style="width:300px; border: 1px solid black">
+                  </ul>
+                </nav>
+                <input type="button" id="backupSessionButton" value="Backup Session">
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+      </form>
+    </div>
+    <div>
       <input id="hdn" type="hidden"
         value='{"groups":[{"group_name":{"id":123,"group-id":"guid4","urls":["https://google.com","https://google.pl"]},"group_name2":{"id":222,"group-id":"guid4","urls":["https://google.fr","https://google.es"]}}],"id_backup":123,"window_backup":"this"}'>
 
-      <form action="" id="form1">
+      <form action="" id="formImportTabs">
         <fieldset style="width:100%">
           <div class="label">
             Import tabs:
           </div>
-          <input type="text" id="importJSONText" value="" style="width:60%">
+          <input type="text" id="importJSONText" value="" style="width:500px">
           <input type="button" id="importJSONButton" value="load">
-          <table class="fixed" style="widows: 500px;">
+          <table class="fixed" style="width: 100%;">
             <tr>
               <td>
                 <header>Groups:</header>
@@ -97,7 +128,11 @@
   </div>
   <div id="group-settings">
   </div>
+
+  <script src="/sessions/sessions_import.js"></script>
+  <script src="/sessions/sessions_backup.js"></script>
   <script src="options.js"></script>
+
 
   <template id="group-template">
     <div class="group">

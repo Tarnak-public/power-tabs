@@ -42,20 +42,37 @@ Represents an automatic assignment. Basically a URL that is assigned to automati
 ----
 listen.js createGroup()
     browser.storage.local.get return stored groups json:
+    about:debugging#/runtime/this-firefox
     about:devtools-toolbox?id=power-tabs%40rapptz-addons.com&type=extension
      "[{"name":"untitled","uuid":"e565f959-3dc2-487a-8823-171e87c502dd","open":true,"active":false,"colour":"#000000"},{"name":"untitled","uuid":"017779f7-8c22-44c8-88d1-171b55abffe5","open":true,"active":false,"colour":"#000000"},{"name":"untitled","uuid":"631aedd6-016d-45a2-8e3e-b34171aaca61","open":true,"active":true,"colour":"#000000"}]"
 ----
 listen.js createTab()
 it setting active-group and creating tab by browser.tabs.create() but with known active-group now.
 ----
-listen.js onTabCreated() here during creation of tab, it's assigned to group:
-browser.sessions.setTabValue(tabInfo.id, "group-id", groupId);
+listen.js onTabCreated() here during creation of tab, it's assigned to group by :
+    browser.sessions.setTabValue(tabInfo.id, "group-id", groupId);
+results in sessionstore.jsonlz4as
+    "windows": [{
+            "tabs": [{
+                    "entries": [{
+                    "extData": {
+                        "extension:power-tabs@rapptz-addons.com:group-id": "\"ee71903a-0c81-4144-a0ad-59abc95092b8\""
+                    },
+
+you can read it:
+    browser.sessions.getTabValue(message.tabId, "group-id");
 ----
 confirm.js loadData()
 seems to be a method which matches tabs to groups during tab creation.
 ----
 
 ------------------------------------------------------------------------
+#### helping links
+
+---- web extensions examples:
+this one save data to own extensions storage:
+https://github.com/mdn/webextensions-examples/tree/master/favourite-colour
+
 edytor online:
 https://jsoneditoronline.org/#right=local.disequ&left=cloud.15aa24c3ab9f460287daf4301c810add
 

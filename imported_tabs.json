@@ -22,5 +22,3 @@
     }
   ]
 }
-
-{"groups":[{"group_name":{"id":123,"group-id":"guid4","urls":["https://google.com","https://google.pl"]},"group_name2":{"id":222,"group-id":"guid4","urls":["https://google.fr","https://google.es"]}}],"id_backup":123,"window_backup":"this"}

@@ -1,6 +1,12 @@
 // decoder of .jsonlz4 for firefox  https://www.jeffersonscher.com/ffu/scrounger.html
 // C:\Users\amibo\AppData\Roaming\Mozilla\Firefox\Profiles\ax6mla76.dev-edition-default 
 // sessionstore.jsonlz4
+
+/*
+https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions
+
+
+*/
 class GroupList {
   constructor() {
     this.groups = [];

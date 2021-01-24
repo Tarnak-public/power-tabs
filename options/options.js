@@ -142,6 +142,7 @@ function loadGroupSettings(data) {
       setting.addAssignment(key.slice(5));
     }
   }
+  getStoredSessions();
 }
 
 function clearGroupSettings() {
@@ -237,66 +238,11 @@ async function onGroupCreate(e) {
   loadGroupSettings(data);
 }
 
-var jsonImported;
-
-async function onImportJSON() {
-  let jsonString = document.getElementById("importJSONText").value;
-  console.debug("entered string:", jsonString);
-  jsonImported = JSON.parse(jsonString);
-  console.debug("got json:", jsonImported);
-  let group_names = jsonImported.groups[0];
-  document.getElementById("groupList").innerHTML = "";
-  for (group in group_names) {
-    console.debug("group:", group);
-    let urls = group_names[group].urls;
-    // addGroupToGroupListFromJson(group + " (" + urls.length + ")");
-    addGroupToGroupListFromJson(group, urls.length);
-    for (url in urls) {
-      console.debug("url:", urls[url]);
-    }
-  }
-}
-
-function addGroupToGroupListFromJson(name, tabsCount) {
-  var ul = document.getElementById("groupList");
-  var li = document.createElement("li");
-  li.appendChild(document.createElement("class"));
-  let textNode = document.createTextNode(name + " (" + tabsCount + ")");
-  li.accessKey = name;
-  li.appendChild(textNode);
-  ul.appendChild(li);
-}
-
-function getTabsFromGroupJSON(json, groupSelected) {
-  console.debug("getTabsFromGroupJSON() groupSelected:", groupSelected);
-  console.debug("got json:", json);
-  let group_names = json.groups[0];
-  for (group in group_names) {
-    if (group != groupSelected) continue;
-    document.getElementById("tabsNames").innerHTML = "Tabs [" + group + "]:";
-    document.getElementById("tabsList").innerHTML = "";
-    console.debug("group:", group);
-    let urls = group_names[group].urls;
-    for (url in urls) {
-      addTabsToTabsListFromJson(urls[url]);
-      console.debug("url:", urls[url]);
-    }
-  }
-}
-
-function addTabsToTabsListFromJson(name) {
-  var ul = document.getElementById("tabsList");
-  var li = document.createElement("li");
-  li.appendChild(document.createTextNode(name));
-  ul.appendChild(li);
-}
-
 function getEventTarget(e) {
   e = e || window.event;
   return e.target || e.srcElement;
 }
 
-var selectedItemGroupList = null;
 var ul = document.getElementById("groupList");
 
 ul.onclick = function (event) {
@@ -314,15 +260,6 @@ ul.onclick = function (event) {
     getTabsFromGroupJSON(jsonImported, target.accessKey);
   }
 };
-
-function changeGroupListActiveItem(newActiveItem) {
-  if (selectedItemGroupList != null && selectedItemGroupList != newActiveItem)
-    selectedItemGroupList.className = "";
-
-  newActiveItem.className = "grey";
-  selectedItemGroupList = newActiveItem;
-  console.debug("new active item: " + newActiveItem);
-}
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Working_with_files#open_files_in_an_extension_using_a_file_picker

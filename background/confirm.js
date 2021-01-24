@@ -5,6 +5,7 @@ const tabId = parseInt(search.get("tabId"));
 const windowId = parseInt(search.get("windowId"));
 var assignedGroup = null;
 
+//###
 async function loadData() {
   const redirectUrlElement = document.getElementById("redirect-url");
   redirectUrlElement.textContent = redirectUrl;
@@ -33,6 +34,7 @@ async function loadData() {
     return;
   }
 
+  console.log("loadData() called");
   for(let el of document.querySelectorAll(".group-name")) {
     el.textContent = assignedGroup.name;
   }
